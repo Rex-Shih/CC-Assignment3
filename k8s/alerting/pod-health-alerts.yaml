@@ -1,0 +1,27 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: pod-health-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: pod-health-alerts
+      rules:
+        - alert: TodoWebPodNotReady
+          expr: kube_pod_status_ready{namespace="default", condition="true", pod=~"todo-web-deployment-.*"} == 0
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "ToDo web pod is not ready"
+            description: "A todo-web pod has been unready for more than 2 minutes."
+        - alert: TodoWebPodRestarting
+          expr: increase(kube_pod_container_status_restarts_total{namespace="default", pod=~"todo-web-deployment-.*"}[5m]) > 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "ToDo web pod is restarting"
+            description: "A todo-web pod restarted within the last 5 minutes."

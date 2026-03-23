@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-web-deployment
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: todo-web
+  template:
+    metadata:
+      labels:
+        app: todo-web
+    spec:
+      containers:
+        - name: todo-web
+          image: yfshih/todo-flask-app:v3
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          env:
+            - name: MONGO_HOST
+              value: mongo-service
+            - name: MONGO_PORT
+              value: "27017"
+            - name: MONGO_DB
+              value: camp2016
+            - name: MONGO_COLLECTION
+              value: todo
+            - name: FLASK_ENV
+              value: production
+            - name: PORT
+              value: "5000"
+            - name: APP_VERSION
+              value: v3
+            - name: FAIL_LIVENESS
+              value: "false"
+            - name: FAIL_READINESS
+              value: "false"
